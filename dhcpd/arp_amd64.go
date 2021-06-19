@@ -1,11 +1,12 @@
 package dhcpd
 
 import (
-	"golang.org/x/sys/unix"
 	"net"
 	"os"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 // ARP Flag values
