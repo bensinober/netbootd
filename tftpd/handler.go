@@ -20,9 +20,10 @@ import (
 )
 
 func (server *Server) tftpReadHandler(filename string, rf io.ReaderFrom) error {
+	server.mu.Lock()
+	defer server.mu.Unlock()
 	raddr := rf.(tftp.OutgoingTransfer).RemoteAddr() // net.UDPAddr
 	laddr := rf.(tftp.RequestPacketInfo).LocalIP()
-
 	server.logger.Info().
 		Str("path", filename).
 		Str("client", raddr.IP.String()).

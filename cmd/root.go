@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/DSpeichert/netbootd/config"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
@@ -17,8 +18,8 @@ var (
 
 func init() {
 	cobra.OnInitialize(config.InitConfig)
-	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "enable debug logging")
-	rootCmd.Flags().BoolVar(&trace, "trace", false, "enable trace logging")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debug logging")
+	rootCmd.PersistentFlags().BoolVar(&trace, "trace", false, "enable trace logging")
 }
 
 var rootCmd = &cobra.Command{

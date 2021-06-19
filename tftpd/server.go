@@ -1,13 +1,15 @@
 package tftpd
 
 import (
+	"net"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/DSpeichert/netbootd/store"
 	"github.com/pin/tftp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"net"
-	"net/http"
-	"time"
 )
 
 type Server struct {
@@ -16,6 +18,7 @@ type Server struct {
 
 	logger zerolog.Logger
 	store  *store.Store
+	mu     sync.Mutex
 }
 
 func NewServer(store *store.Store) (server *Server, err error) {
