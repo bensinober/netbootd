@@ -91,14 +91,14 @@ router:
 # NTP servers in the order of preference (Option 42), IP address required
 ntp:
   - 192.168.17.1
-# Whether a bundled iPXE bootloader should be served first (before bootFilename).
+# Whether a bundled iPXE bootloader should be served first (before bootFileName).
 # When iPXE is loaded, it does DHCP again and netbootd detects its client string
-# to break the boot loop and serve bootFilename instead.
+# to break the boot loop and serve bootFileName instead.
 ipxe: true
 # The name of NBP file name, server over TFTP from "next server",
 # which netbootd automatically points to be itself.
 # This should map to a "mount" below.
-bootFilename: install.ipxe
+bootFileName: install.ipxe
 
 # Mounts define virtual per-host (per-manifest) paths that are acessible
 # over both TFTP and HTTP but only from the IP address of in this manifest.

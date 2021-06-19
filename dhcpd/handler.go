@@ -130,22 +130,26 @@ func (server *Server) HandleMsg4(buf []byte, oob *ipv4.ControlMessage, peer net.
 		resp.Options.Update(dhcpv4.OptTFTPServerName(localIp.String()))
 	}
 
+	// BootFileName
 	if req.IsOptionRequested(dhcpv4.OptionBootfileName) && !manifest.Suspended {
 		// serve iPXE script if user-class is iPXE, or whatever the user chooses if iPXE is disabled
 		if stringSlicesEqual(req.UserClass(), []string{"iPXE"}) || !manifest.Ipxe {
-			resp.Options.Update(dhcpv4.OptBootFileName(manifest.BootFilename))
+			//if manifest.BootFileName != "" {
+			resp.BootFileName = manifest.BootFileName
+			resp.Options.Update(dhcpv4.OptBootFileName(manifest.BootFileName))
 		} else if len(req.ClientArch()) > 0 && req.ClientArch()[0] > 0 {
 			// likely UEFI (not BIOS)
 			if strings.Contains(req.ClassIdentifier(), "PXEClient:Arch:00011") {
-				resp.Options.Update(dhcpv4.OptBootFileName("ipxe_arm64.efi"))
+				resp.BootFileName = "ipxe_arm64.efi"
 			} else {
-				resp.Options.Update(dhcpv4.OptBootFileName("ipxe.efi"))
+				resp.BootFileName = "ipxe.efi"
 			}
 			//bootFileSize = 1
 		} else {
-			resp.Options.Update(dhcpv4.OptBootFileName("undionly.kpxe"))
+			resp.BootFileName = "undionly.kpxe"
 			//bootFileSize = 1
 		}
+		resp.Options.Update(dhcpv4.OptBootFileName(resp.BootFileName))
 	}
 
 	if req.IsOptionRequested(dhcpv4.OptionBootFileSize) && bootFileSize > 0 {

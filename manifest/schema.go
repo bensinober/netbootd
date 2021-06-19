@@ -24,7 +24,7 @@ type Manifest struct {
 	Router        []net.IP
 	NTP           []net.IP
 	Ipxe          bool
-	BootFilename  string `yaml:"bootFilename"`
+	BootFileName  string `yaml:"bootFileName"`
 	Mounts        []Mount
 	Suspended     bool
 }
