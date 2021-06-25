@@ -163,8 +163,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if stat.IsDir() { // Serve folder listing
-			root, _ := filepath.Abs(mount.LocalDir)
-			http.ServeFile(w, r, root)
+			if !strings.HasSuffix(r.URL.Path, "/") {
+				path = r.URL.Path + "/"
+				w.Header().Set("Location", path)
+				http.Redirect(w, r, path, 301)
+				return
+			}
+			http.ServeFile(w, r, path)
 			return
 		} else { // Serve file
 			f, err := os.Open(path)
