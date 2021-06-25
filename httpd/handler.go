@@ -82,7 +82,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Interface("mount", mount).
 		Msg("found mount")
 
-	if mount.Content != "" {
+	if mount.Content != "" { // Serve content directly from manifest
 		tmpl, err := template.New("").Funcs(sprig.TxtFuncMap()).Parse(mount.Content)
 		if err != nil {
 			h.server.logger.Error().
@@ -118,7 +118,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Str("client", raddr.String()).
 			Str("manifest_for", manifestRaddr.String()).
 			Msg("transfer finished")
-	} else if mount.Proxy != "" {
+	} else if mount.Proxy != "" { // Serve proxy http
 		d, err := mount.ProxyDirector()
 		if err != nil {
 			h.server.logger.Error().
@@ -132,13 +132,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		rp.ServeHTTP(w, r)
 		return
-	} else if mount.LocalDir != "" {
+	} else if mount.LocalDir != "" { // Serve local file or directory listing
 		path := filepath.Join(mount.LocalDir, mount.Path)
-		
+
 		if mount.AppendSuffix {
 			path = filepath.Join(mount.LocalDir, strings.TrimPrefix(r.URL.Path, mount.Path))
 		}
-		
+
 		if !strings.HasPrefix(path, mount.LocalDir) {
 			h.server.logger.Error().
 				Err(err).
@@ -147,24 +147,37 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		f, err := os.Open(path)
+		stat, err := os.Stat(path)
 		if err != nil {
-			h.server.logger.Error().
-				Err(err).
-				Msgf("Could not get file from local dir: %q", path)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if os.IsNotExist(err) {
+				h.server.logger.Error().
+					Err(err).
+					Msgf("file or directory not found: %q", path)
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				h.server.logger.Error().
+					Err(err).
+					Msgf("could not stat file or directory: %q", path)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
-		stat, err := f.Stat()
-		if err != nil {
-			h.server.logger.Error().
-				Err(err).
-				Msgf("could not stat file: %q", path)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if stat.IsDir() { // Serve folder listing
+			root, _ := filepath.Abs(mount.LocalDir)
+			http.ServeFile(w, r, root)
+			return
+		} else { // Serve file
+			f, err := os.Open(path)
+			if err != nil {
+				h.server.logger.Error().
+					Err(err).
+					Msgf("Could not get file from local dir: %q", path)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.ServeContent(w, r, r.URL.Path, stat.ModTime(), f)
 			return
 		}
-		http.ServeContent(w, r, r.URL.Path, stat.ModTime(), f)
-		return
 	} else {
 		// mount has neither .Path, .Proxy nor .LocalDir defined
 		h.server.logger.Error().
