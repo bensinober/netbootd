@@ -44,6 +44,12 @@ mounts:
       initrd {{ .HttpBaseUrl }}/initrd.gz
       boot
 
+  # serve examples folder
+  - path: /examples
+    pathIsPrefix: true
+    localDir: /path/to/my/netbootd/examples
+    appendSuffix: true
+
   # Note: this example is built for a UEFI machine
   - path: /preseed.txt
     content: |
